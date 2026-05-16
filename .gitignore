@@ -3,3 +3,5 @@ dist/
 .env
 
 /src/generated/prisma
+
+API_GUIDE.md
