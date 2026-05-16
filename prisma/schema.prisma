@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+enum UoMType {
+  MIN
+  MAX
+  TIMELINE
+  ZERO
+}
+
+enum GoalStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+enum CheckInStatus {
+  NOT_STARTED
+  ON_TRACK
+  COMPLETED
+}
+
+enum ApprovalAction {
+  APPROVED
+  REJECTED
+  RETURNED
+}
+
+enum CyclePhase {
+  GOAL_SETTING
+  Q1
+  Q2
+  Q3
+  Q4
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String?
+  role        Role     @default(EMPLOYEE)
+  azureOid    String?  @unique
+  managerId   String?
+  manager     User?    @relation("ManagerEmployee", fields: [managerId], references: [id])
+  subordinates User[]  @relation("ManagerEmployee")
+  createdAt   DateTime @default(now())
+
+  goals       Goal[]
+  approvals   Approval[]
+  auditLogs   AuditLog[]
+  checkIns    CheckIn[]
+  sharedGoals GoalShare[]
+}
+
+model Cycle {
+  id          String     @id @default(cuid())
+  year        Int
+  phase       CyclePhase
+  windowOpen  DateTime
+  windowClose DateTime
+  createdAt   DateTime   @default(now())
+
+  goals       Goal[]
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  employeeId  String
+  employee    User       @relation(fields: [employeeId], references: [id])
+  cycleId     String
+  cycle       Cycle      @relation(fields: [cycleId], references: [id])
+  thrustArea  String
+  title       String
+  description String?
+  uomType     UoMType
+  target      Float
+  weightage   Float
+  status      GoalStatus @default(DRAFT)
+  isLocked    Boolean    @default(false)
+  deadline    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  approvals   Approval[]
+  checkIns    CheckIn[]
+  shares      GoalShare[]
+  auditLogs   AuditLog[]
+}
+
+model GoalShare {
+  id              String  @id @default(cuid())
+  goalId          String
+  goal            Goal    @relation(fields: [goalId], references: [id])
+  recipientId     String
+  recipient       User    @relation(fields: [recipientId], references: [id])
+  customWeightage Float
+
+  @@unique([goalId, recipientId])
+}
+
+model Approval {
+  id         String         @id @default(cuid())
+  goalId     String
+  goal       Goal           @relation(fields: [goalId], references: [id])
+  managerId  String
+  manager    User           @relation(fields: [managerId], references: [id])
+  action     ApprovalAction
+  comment    String?
+  createdAt  DateTime       @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  changedBy  String
+  changer    User     @relation(fields: [changedBy], references: [id])
+  goalId     String?
+  goal       Goal?    @relation(fields: [goalId], references: [id])
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+}
+
+
+model CheckIn {
+  id             String        @id @default(cuid())
+  goalId         String
+  goal           Goal          @relation(fields: [goalId], references: [id])
+  employeeId     String
+  employee       User          @relation(fields: [employeeId], references: [id])
+  quarter        CyclePhase
+  planned        Float
+  actual         Float?
+  status         CheckInStatus @default(NOT_STARTED)
+  managerComment String?
+  completionDate DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}

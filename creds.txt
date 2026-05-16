@@ -1,0 +1,13 @@
+Admin
+username: admin@test.com
+password: admin123
+
+
+Manager
+username: manager@test.com
+password: manager123
+
+Employee
+username: employee@test.com
+password: employee123
+
