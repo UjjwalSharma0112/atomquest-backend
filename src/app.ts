@@ -8,7 +8,7 @@ import adminRoutes from "./routes/admin";
 import approvalRoutes from "./routes/approval";
 import checkinRoutes from "./routes/checkins";
 import reportRoutes from "./routes/reports";
-
+import analyticsRoutes from "./routes/analytics"
 const app = express();
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [
@@ -46,5 +46,5 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/approvals", approvalRoutes);
 app.use("/api/checkins", checkinRoutes);
 app.use("/api/reports", reportRoutes);
-
+app.use("/api/analytics", analyticsRoutes);
 export default app;
